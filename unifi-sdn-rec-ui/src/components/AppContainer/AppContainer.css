@@ -1,0 +1,17 @@
+body {
+	margin: 0;
+}
+
+.AppContainer {
+	font-family: 'Lato', sans-serif;
+	height: 100%;
+	overflow: hidden;
+	position: absolute;
+	width: 100%;
+}
+
+@media screen and (max-width: 700px) {
+	.AppContainer {
+		overflow: initial;
+	}
+}

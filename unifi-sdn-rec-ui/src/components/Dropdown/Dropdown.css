@@ -1,0 +1,34 @@
+.Dropdown {
+	padding: 0px 25px;
+}
+.Dropdown-select {
+	height: 35px;
+	width: 100%;
+}
+.Dropdown-option {
+	background: #1d262c;
+	cursor: pointer;
+	padding: 10px;
+	position: sticky;
+	z-index: 2;
+}
+.Dropdown-options-container {
+	border: 1px solid #969ba3;
+	border-top: none;
+}
+.Dropdown-option:hover {
+	background: #009edd;
+}
+.Dropdown-static {
+	border: 1px solid #969ba3;
+	cursor: pointer;
+	padding: 10px;
+}
+.Dropdown-arrow {
+	border: solid #969ba3;
+	border-width: 0 2px 2px 0;
+	display: inline-block;
+	float: right;
+	padding: 4.5px;
+	transform: rotate(45deg);
+}

@@ -1,0 +1,26 @@
+{
+  "name": "unifi-sdn-rec-ui",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "homepage": "http://michalwrobel2.github.io/build/static",
+  "dependencies": {
+    "gh-pages": "^1.1.0",
+    "prop-types": "^15.6.1",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2",
+    "react-draggable": "^3.0.5",
+    "react-scripts": "^1.1.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.19.1",
+    "eslint-plugin-react": "^7.8.2"
+  },
+  "scripts": {
+    "dev": "react-scripts start",
+    "build": "react-scripts build",
+    "deploy": "gh-pages -b master -d build"
+  },
+  "author": "Michał Wróbel",
+  "license": "MIT"
+}

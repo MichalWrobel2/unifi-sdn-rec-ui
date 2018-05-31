@@ -1,0 +1,33 @@
+.MainPanel {
+	background: linear-gradient(#ededed, #cccccc);
+	display: inline-block;
+	height: 100%;
+	width: calc(100% - 350px);
+	user-select: none;
+}
+.Router-handle {
+	cursor: all-scroll;
+}
+.MainPanel-coverageArea {
+	background: rgba(68, 137, 244, 0.4);
+	position: absolute;
+	z-index: -1;
+}
+.Router-image {
+	height: inherit;
+	position: absolute;
+	width: inherit;
+}
+.Receiver {
+	border-radius: 50%;
+	height: 20px;
+	position: absolute;
+	width: 20px;
+}
+@media screen and (max-width: 700px) {
+    .MainPanel {
+    	display: block;
+    	height: 100%;
+    	width: 100%;
+    }
+}

@@ -1,0 +1,27 @@
+.SimpleButton-bg, .SimpleButton-nobg {
+	display: inline-block;
+	height: 30px;
+	width: 75px;
+	cursor: pointer;
+	transition: all .2s ease;
+}
+.SimpleButton-nobg {
+	color:#009edd;
+}
+.SimpleButton-nobg:hover { 
+	color: white;
+}
+.SimpleButton-text {
+	line-height: 30px;
+	text-align: center;
+	cursor: pointer;
+	user-select: none;
+}
+.SimpleButton-bg {
+	background: #009edd; 
+	border-radius: 5px;
+	margin-right: 15px;	
+}
+.SimpleButton-bg:hover {
+	transform: scale(1.05);
+}
