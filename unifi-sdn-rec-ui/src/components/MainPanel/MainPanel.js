@@ -8,33 +8,22 @@ class MainPanel extends React.Component {
 		super();
 		this.state = {
 			areaBounds: null,
-			routerCoords: { x: 0, y: 0 }
+			routerCoords: { x: 0, y: 0 },
+			scaleFactor: 1,
+			imageSize: 192 * 0.5,
+			scalableElements: {
+				areaSignal: -80,
+				antennaGain: 1,
+				dotSize: 10
+			}
 		};
 
 		this.areaRef = React.createRef();
 		this.initialCoords = [];
-		this.AREA_SIGNAL = -80;
-		this.CLIENT_ANTENNA_GAIN = 1;
-		this.DOT_SIZE = 10;
-		this.IMAGE_SIZE = 192 * 0.5;
 		this.RECEIVERS_COUNT = 10;
 	}
 	componentDidUpdate(prevProps) {
-
-		if (prevProps.range < this.props.range) {
-			const { clientHeight, clientWidth } = this.areaRef.current;
-			const { x, y } = this.state.routerCoords;
-			const overlap = (axis) => {
-				const screenDimension = axis === 'x' ? clientWidth : clientHeight;
-				const position = axis === 'x' ? x : y;
-
-				const newDistance = screenDimension - position - this.props.range;
-
-				return newDistance < 0 ? (position + newDistance) : position;
-			}
-
-			this.setState({ routerCoords: { x: overlap('x'), y: overlap() } })
-		}
+		this.updateOnProps(prevProps);
 	}
 	componentDidMount() {
 		this.getWindowSizeAndExec(() => this.setState({ receivers: this.generateReceivers(this.RECEIVERS_COUNT) }));
@@ -43,18 +32,66 @@ class MainPanel extends React.Component {
 	componentWillUnmount() {
 		window.removeEventListener('resize', this.handleResize.bind(this));
 	}
+	updateOnProps(prevProps) {
+		const { x, y } = this.state.routerCoords;
+		const { range } = this.props.setup;
+		const { x: areaX, y: areaY } = this.state.areaBounds;
+		let updatedState = {};
+		if (prevProps.range < this.props.range) {
+			const { x: clientWidth, y: clientHeight } = this.state.areaBounds;
+
+			const overlap = (axis) => {
+				const screenDimension = axis === 'x' ? clientWidth : clientHeight;
+				const position = axis === 'x' ? x : y;
+
+				const newDistance = screenDimension - position - this.props.range;
+
+				return newDistance < 0 ? (position + newDistance) : position;
+			}
+			updatedState.routerCoords = { x: overlap('x'), y: overlap() };
+		}
+		if (prevProps.scale !== this.props.scale) {
+			const scaleFactor = this.props.scale < prevProps.scale ? this.props.scale / prevProps.scale : this.props.scale;
+			const updatedReceiversCoords = this.state.receivers.map((receiver, index) => {
+
+				const newReceiver = { x: this.state.receivers[index].x * scaleFactor, y: this.state.receivers[index].y * scaleFactor };
+
+				return newReceiver;
+			});
+			updatedState = {
+				scaleFactor: scaleFactor,
+				routerCoords: { x: x * scaleFactor, y: y * scaleFactor },
+				receivers: updatedReceiversCoords,
+				scalableElements: {
+					areaSignal: -80 * scaleFactor,
+					antennaGain: 1 * scaleFactor,
+					dotSize: this.state.scalableElements.dotSize * scaleFactor
+				}
+			}
+
+		}
+		this.areaRef.current.scrollTo(x - (areaX / 2) + (range / 2), y - (areaY / 2) + (range / 2));
+		if (Object.keys(updatedState).length) {
+
+			this.setState(updatedState);
+		}
+	}
 	getWindowSizeAndExec(action) {
 		const { clientHeight, clientWidth } = this.areaRef.current;
 		this.setState({ areaBounds: { x: clientWidth, y: clientHeight } }, action);
 	}
 	handleResize() {
+		if (this.props.scale !== 1) {
+
+			return;
+		}
 		this.getWindowSizeAndExec(() => {
 			const range = this.props.range;
 			const routerCoords = this.state.routerCoords;
 			const newCoords = [];
 			this.state.receivers.map((receiver, index) => {
 
-				return newCoords.push(this.correctOverlapping(receiver, this.DOT_SIZE, index));
+				return newCoords.push(this.correctOverlapping(receiver, this.state.scalableElements.dotSize, index));
 			});
 			this.setState({
 				receivers: newCoords,
@@ -62,8 +99,18 @@ class MainPanel extends React.Component {
 			});
 		});
 	}
+	handleStart() {
+		const { range, scaleFactor } = this.props.setup;
+		const rsRatio = range / scaleFactor;
+		this.props.data({ scaleFactor: 1, range: rsRatio });
+	}
 	handleDrag(_, { x, y }) {
+		
 		this.setState({ routerCoords: { x, y } });
+	}
+	handleStop() {
+		const { range, scaleFactor } = this.props.setup;
+		this.props.data({ scaleFactor: scaleFactor, range: range });
 	}
 	correctOverlapping(generatedCoords, objSize, index) {
 		const size = objSize;
@@ -103,7 +150,7 @@ class MainPanel extends React.Component {
 
 		const generatedCoords = Array.from({ length: num }, () => {
 
-			return this.correctOverlapping({ x: Math.floor(Math.random() * x), y: Math.floor(Math.random() * y) }, this.DOT_SIZE);
+			return this.correctOverlapping({ x: Math.floor(Math.random() * x), y: Math.floor(Math.random() * y) }, this.state.scalableElements.dotSize);
 		});
 		if (this.initialCoords.length <= this.RECEIVERS_COUNT) {
 			generatedCoords.forEach((coords) => {
@@ -119,7 +166,7 @@ class MainPanel extends React.Component {
 	}
 	calculateDistance(routerCoords, receiverCoords) {
 
-		return Math.hypot((receiverCoords.x + this.DOT_SIZE / 2) - (routerCoords.x + this.props.range / 2) , (receiverCoords.y + this.DOT_SIZE / 2) - (routerCoords.y + this.props.range / 2));
+		return Math.hypot((receiverCoords.x + this.state.scalableElements.dotSize / 2) - (routerCoords.x + this.props.range / 2) , (receiverCoords.y + this.state.scalableElements.dotSize / 2) - (routerCoords.y + this.props.range / 2));
 	}
 	isCovered(index) {
 
@@ -128,23 +175,18 @@ class MainPanel extends React.Component {
 
 	calculateCoverageOfPoint(routerCoords, receiverCoords) {
 
-		const setup = this.props.setup;
 		const distance = this.calculateDistance(routerCoords, receiverCoords);
-		const pathLoss = 20 * Math.log10(distance / 1000) + 20 * Math.log10(setup.radio) + 92.45;
+		// const pathLoss = 20 * Math.log10(distance / 1000) + 20 * Math.log10(setup.radio) + 92.45;
 
-		return setup.dropdown - pathLoss + this.CLIENT_ANTENNA_GAIN >= this.AREA_SIGNAL;
+		return distance <= this.props.range / 2 + this.state.scalableElements.dotSize / 2;
 	}
 	render() {
-
-		const routerImagePosPerc = 100 - ( this.IMAGE_SIZE * 100 / this.props.range);
-		const wrapperStyle = {
-			minHeight: `calc(100% - ${this.props.range}px)`
-		};
+		const routerImagePosPerc = 100 - ( this.state.imageSize * 100 / this.props.range);
 
 		const receriversToRender = !this.isReceiverGenerated() || Object.values(this.state.receivers).map((receiver, index) => {
 			const receiverStyle = {
-				height: this.DOT_SIZE,
-				width: this.DOT_SIZE,
+				height: this.state.scalableElements.dotSize,
+				width: this.state.scalableElements.dotSize,
 				left: receiver.x,
 				top: receiver.y,
 				backgroundColor: this.isCovered(index) ? 'green' : 'red'
@@ -153,44 +195,56 @@ class MainPanel extends React.Component {
 			return <div key = {index} className = 'Receiver' style = {receiverStyle}></div>
 		});
 		const imageStyle = {
-			display: this.IMAGE_SIZE < this.props.range ? 'block' : 'none',
-			width: this.IMAGE_SIZE,
-			height: this.IMAGE_SIZE,
-			left: `calc(${routerImagePosPerc}% - ${(this.props.range - this.IMAGE_SIZE) / 2}px)`,
-			top: `calc(${routerImagePosPerc}% - ${(this.props.range - this.IMAGE_SIZE) / 2 }px)`
+			display: this.state.imageSize < this.props.range ? 'block' : 'none',
+			width: this.state.imageSize,
+			height: this.state.imageSize,
+			left: `calc(${routerImagePosPerc}% - ${(this.props.range - this.state.imageSize) / 2}px)`,
+			top: `calc(${routerImagePosPerc}% - ${(this.props.range - this.state.imageSize) / 2 }px)`
 		};
 		const coverageStyle = {
 			height: `${this.props.range}px`,
 			width: `${this.props.range}px`,
 			borderRadius: '50%'
 		};
+		const panelStyle = {
+			width: this.state.areaBounds && this.state.areaBounds.hasOwnProperty('x') ? `calc(${this.state.areaBounds.x}px * ${this.props.scale})` : 'none',
+			height: this.state.areaBounds && this.state.areaBounds.hasOwnProperty('y') ? `calc(${this.state.areaBounds.y}px * ${this.props.scale})` : 'none'
+		}
+		const rangeStyle = {
+			width: this.props.range,
+			height: this.props.range
+		}
 
 		return(
 
 			<div className = 'MainPanel'
-				scale = {this.props.scale}
 				ref = {this.areaRef}
 				setup = {this.props.setup}
 				field = {this.props.range}>
-				<Draggable
-					axis = 'both'
-					handle = '.Router-handle'
-					bounds = 'parent'
-					position = {this.state.routerCoords}
-					onDrag={this.handleDrag.bind(this)}>
-					<div className = 'Router-handle' style = {{ width: this.props.range, height: this.props.range }}>
-						<div className = 'MainPanel-coverageArea' style = {coverageStyle}>
-							<img style = {imageStyle}
-								className = 'Router-image'
-								draggable = 'false'
-								src = 'https://unifi-hd.ubnt.com/5b30823e7da7b814bb226a9fc0802a19.png'
-								alt = 'Acces Point'/>
+				<div className = 'MainPanel-area'
+					style = {panelStyle}>
+					<Scale scale = {this.props.scale} scaleFactor = {this.state.scaleFactor}/>
+					<Draggable
+						axis = 'both'
+						handle = '.Router-handle'
+						bounds = 'parent'
+						position = {this.state.routerCoords}
+						onStart = {this.handleStart.bind(this)}
+						onDrag = {this.handleDrag.bind(this)}
+						onStop = {this.handleStop.bind(this)}>
+						<div className = 'Router-handle' style = {rangeStyle}>
+							<div className = 'MainPanel-coverageArea' style = {coverageStyle}>
+								<div></div>
+								<img style = {imageStyle}
+									className = 'Router-image'
+									draggable = 'false'
+									src = 'https://unifi-hd.ubnt.com/5b30823e7da7b814bb226a9fc0802a19.png'
+									alt = 'Acces Point'/>
+							</div>
 						</div>
-					</div>
-				</Draggable>
-				{ this.isReceiverGenerated() && <div>{receriversToRender}</div> }
-				<div className = 'Scale-wrapper' style = {wrapperStyle}></div>
-				<Scale scale = {this.props.scale}/>
+					</Draggable>
+				</div>
+				{ this.isReceiverGenerated() && receriversToRender }
 			</div>
 		)
 	}

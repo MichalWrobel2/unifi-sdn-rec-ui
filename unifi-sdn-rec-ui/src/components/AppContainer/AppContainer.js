@@ -11,65 +11,61 @@ class AppContainer extends React.Component {
 		this.state = {
 			txOptions: [4, -6 , -16],
 			radioOptions: [2.4, 5],
-			mapScaleLegend: 100,
+			scaleFactor: 1,
 			dropdown: 4,
 			radio: 2.4,
-			range: 352,
+			range: 353.4424865920735,
 			saved: {
 				dropdown: 4,
-				radio: 2.4
+				radio: 2.4,
+				scaleFactor: 1,
+				range: 353.4424865920735
 			}
 		}
 	}
-	getRange() {
-		const { dropdown, radio } = this.state.saved;
-		let distance = null;
+	getRange(frequency, txPower) {
 
-		if (dropdown === 4 && radio === 2.4) {
-			distance = 176;
-		}
-		if (dropdown === 4 && radio === 5) {
-			distance = 84;
-		}
-		if (dropdown === -6 && radio === 2.4) {
-			distance = 55;
-		}
-		if (dropdown === -6 && radio === 5) {
-			distance = 27;
-		}
-		if (dropdown === -16 && radio === 2.4) {
-			distance = 18;
-		}
-		if (dropdown === -16 && radio === 5) {
-			distance = 8;
-		}
-
-		return distance * 2;
+		return this.state.scaleFactor * (2 * Math.pow(10, (27.55 - (20 * Math.log10(frequency * 1000)) + (Math.abs(-80) + txPower + 1)) / 20.0));
 	}
 	getData(data) {
-		this.tempData = data;
+		console.log(data);
 		this.setState(data);
 		this.cancel = false;
 	}
 	handleClick(action) {
 		const { radio, dropdown } = this.state;
-		if (action === 'save') {
-			this.setState({ saved: { radio, dropdown } }, () => {
-				this.setState({ range: this.getRange() })
-			});
+		if (action === 'cancel') {
+			this.setState({ radio, dropdown });
+			this.cancel = true;
 
 			return;
 		}
-		this.setState({ radio, dropdown });
-		this.cancel = true;
+		if (action === 'save') {
+			let newScale = 1;
+			if (dropdown === -16) {
+				newScale = 8;
+			} else if (dropdown === 4) {
+				newScale = 1;
+			} else if (dropdown === -6) {
+				newScale = 3;
+			}
+			this.setState({ saved: { radio, dropdown, scaleFactor: newScale }, scaleFactor: newScale }, () => {
+				const range = this.getRange(radio, dropdown);
+				const newState = { range: range, saved: { radio, dropdown, scaleFactor: newScale, range: range } };
+
+				this.setState(newState)
+
+			});
+		}
 	}
 
 	render() {
 
 		return (
 			<div className = 'AppContainer'>
-				<MainPanel scale = {this.state.mapScaleLegend}
-					wrapperToLift = {this.state.scale}
+				<MainPanel
+					data = {this.getData.bind(this)}
+					scale = {this.state.scaleFactor}
 					setup = {this.state.saved}
 					range = {this.state.range}
 				/>

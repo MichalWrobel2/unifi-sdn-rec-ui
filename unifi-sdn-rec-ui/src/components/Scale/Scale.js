@@ -5,10 +5,11 @@ import './Scale.css';
 class Scale extends React.Component {
 
 	render() {
-		const scaleCount = this.props.scale;
+
+		const display = Math.floor(100 / this.props.scale);
 
 		return (
-			<div className = 'Scale' style = {{ width: scaleCount }}>{`${scaleCount} m`}</div>
+			<div className = 'Scale'>{`${display} m`}</div>
 		)
 	}
 }

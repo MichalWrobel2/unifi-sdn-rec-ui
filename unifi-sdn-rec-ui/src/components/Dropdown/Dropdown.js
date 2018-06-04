@@ -56,7 +56,7 @@ class Dropdown extends React.Component {
 		});
 
 		return (
-			<div className = 'Dropdown' 
+			<div className = 'Dropdown'
 				current = {this.props.currentDropdown}
 				options = {this.props.options}
 				title = {this.props.title}
