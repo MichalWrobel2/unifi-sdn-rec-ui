@@ -2,13 +2,14 @@ import ControlPanel from '../ControlPanel/ControlPanel.js';
 import MainPanel from '../MainPanel/MainPanel.js';
 import PropTypes from 'prop-types';
 import React from 'react';
-
+import Scale from '../Scale/Scale.js';
 import './AppContainer.css';
 
 class AppContainer extends React.Component {
 	constructor() {
 		super();
 		this.state = {
+			cancel: false,
 			txOptions: [4, -6 , -16],
 			radioOptions: [2.4, 5],
 			scaleFactor: 1,
@@ -28,15 +29,14 @@ class AppContainer extends React.Component {
 		return this.state.scaleFactor * (2 * Math.pow(10, (27.55 - (20 * Math.log10(frequency * 1000)) + (Math.abs(-80) + txPower + 1)) / 20.0));
 	}
 	getData(data) {
-		console.log(data);
+		Object.assign(data, { cancel: false });
 		this.setState(data);
-		this.cancel = false;
+
 	}
 	handleClick(action) {
 		const { radio, dropdown } = this.state;
 		if (action === 'cancel') {
-			this.setState({ radio, dropdown });
-			this.cancel = true;
+			this.setState({ radio, dropdown, cancel: true });
 
 			return;
 		}
@@ -49,7 +49,15 @@ class AppContainer extends React.Component {
 			} else if (dropdown === -6) {
 				newScale = 3;
 			}
-			this.setState({ saved: { radio, dropdown, scaleFactor: newScale }, scaleFactor: newScale }, () => {
+			this.setState({
+				saved: {
+					radio,
+					dropdown,
+					scaleFactor: newScale,
+				},
+				cancel: false,
+				scaleFactor: newScale
+			}, () => {
 				const range = this.getRange(radio, dropdown);
 				const newState = { range: range, saved: { radio, dropdown, scaleFactor: newScale, range: range } };
 
@@ -63,6 +71,7 @@ class AppContainer extends React.Component {
 
 		return (
 			<div className = 'AppContainer'>
+				<Scale scale = {this.state.scaleFactor}/>
 				<MainPanel
 					data = {this.getData.bind(this)}
 					scale = {this.state.scaleFactor}
@@ -72,7 +81,7 @@ class AppContainer extends React.Component {
 				<ControlPanel
 					data = {this.getData.bind(this)}
 					saved = {this.state.saved}
-					cancel = {this.cancel}
+					cancel = {this.state.cancel}
 					dropdownOptions = {this.state.txOptions}
 					handleClick = {(action) => this.handleClick(action)}
 					radioOptions = {this.state.radioOptions}

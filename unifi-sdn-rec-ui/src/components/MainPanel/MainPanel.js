@@ -1,6 +1,5 @@
 import Draggable from 'react-draggable';
 import React from 'react';
-import Scale from '../Scale/Scale.js';
 import './MainPanel.css';
 
 class MainPanel extends React.Component {
@@ -51,7 +50,7 @@ class MainPanel extends React.Component {
 			updatedState.routerCoords = { x: overlap('x'), y: overlap() };
 		}
 		if (prevProps.scale !== this.props.scale) {
-			const scaleFactor = this.props.scale < prevProps.scale ? this.props.scale / prevProps.scale : this.props.scale;
+			const scaleFactor = this.props.scale / prevProps.scale;
 			const updatedReceiversCoords = this.state.receivers.map((receiver, index) => {
 
 				const newReceiver = { x: this.state.receivers[index].x * scaleFactor, y: this.state.receivers[index].y * scaleFactor };
@@ -60,7 +59,6 @@ class MainPanel extends React.Component {
 			});
 			updatedState = {
 				scaleFactor: scaleFactor,
-				routerCoords: { x: x * scaleFactor, y: y * scaleFactor },
 				receivers: updatedReceiversCoords,
 				scalableElements: {
 					areaSignal: -80 * scaleFactor,
@@ -105,11 +103,13 @@ class MainPanel extends React.Component {
 		this.props.data({ scaleFactor: 1, range: rsRatio });
 	}
 	handleDrag(_, { x, y }) {
-		
+
 		this.setState({ routerCoords: { x, y } });
 	}
 	handleStop() {
+		const { x, y } = this.state.routerCoords;
 		const { range, scaleFactor } = this.props.setup;
+		this.setState({ routerCoords: { x: x * scaleFactor, y: y * scaleFactor } })
 		this.props.data({ scaleFactor: scaleFactor, range: range });
 	}
 	correctOverlapping(generatedCoords, objSize, index) {
@@ -221,9 +221,9 @@ class MainPanel extends React.Component {
 				ref = {this.areaRef}
 				setup = {this.props.setup}
 				field = {this.props.range}>
+				
 				<div className = 'MainPanel-area'
 					style = {panelStyle}>
-					<Scale scale = {this.props.scale} scaleFactor = {this.state.scaleFactor}/>
 					<Draggable
 						axis = 'both'
 						handle = '.Router-handle'

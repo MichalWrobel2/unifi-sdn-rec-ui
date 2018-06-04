@@ -16,7 +16,7 @@ class Radio extends React.Component {
 		this.setState({ value: newValue });
 		this.props.data({ radio: newValue });
 	}
-	componentDidUpdate(nextProps) {
+	componentWillReceiveProps(nextProps) {
 
 		if (nextProps.saved.radio !== this.state.value && nextProps.cancel) {
 

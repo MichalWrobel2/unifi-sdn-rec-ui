@@ -10,10 +10,9 @@ class Dropdown extends React.Component {
 			optionsVisible: false
 		}
 	}
-	componentDidUpdate(nextProps) {
+	componentWillReceiveProps(nextProps) {
 
 		if (nextProps.saved.dropdown !== this.state.value && nextProps.cancel) {
-
 			this.changeValue(nextProps.saved.dropdown);
 		}
 	}
